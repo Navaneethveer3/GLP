@@ -1,0 +1,130 @@
+/* Page Transitions */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s var(--ease-spring);
+}
+
+/* Demon Animations */
+@keyframes demonFloat {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-15px) rotate(2deg);
+    }
+}
+
+.demon-wrapper svg {
+    filter: drop-shadow(0 0 15px rgba(255, 59, 59, 0.4));
+    animation: demonFloat 3s infinite ease-in-out;
+}
+
+@keyframes demonHurt {
+    0% {
+        transform: translateX(0);
+        filter: brightness(1) drop-shadow(0 0 15px rgba(255, 0, 0, 0.5));
+    }
+
+    25% {
+        transform: translateX(-10px) rotate(-5deg);
+        filter: brightness(2) drop-shadow(0 0 30px rgba(255, 0, 0, 0.8));
+    }
+
+    50% {
+        transform: translateX(10px) rotate(5deg);
+        filter: brightness(2) drop-shadow(0 0 30px rgba(255, 0, 0, 0.8));
+    }
+
+    75% {
+        transform: translateX(-10px);
+    }
+
+    100% {
+        transform: translateX(0);
+        filter: brightness(1);
+    }
+}
+
+.demon-hurt svg {
+    animation: demonHurt 0.4s ease-in-out;
+}
+
+@keyframes demonDie {
+    0% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    20% {
+        transform: scale(1.2) rotate(-10deg);
+        filter: brightness(3);
+    }
+
+    100% {
+        transform: scale(0) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+.demon-dead svg {
+    animation: demonDie 1s forwards cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Jar Animations */
+.jar-liquid {
+    transition: height 1s cubic-bezier(0.23, 1, 0.32, 1), fill 0.5s ease;
+}
+
+@keyframes liquidSplash {
+    0% {
+        transform: scaleY(1);
+    }
+
+    50% {
+        transform: scaleY(1.1);
+    }
+
+    100% {
+        transform: scaleY(1);
+    }
+}
+
+.filling .jar-liquid {
+    animation: liquidSplash 0.5s ease;
+}
+
+/* Confetti placeholder class (actual logic in JS) */
+.win-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.5s;
+    z-index: 10;
+}
+
+.win-text {
+    font-size: 3rem;
+    font-weight: 900;
+    background: var(--brand-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(0, 242, 254, 0.5);
+}

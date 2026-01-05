@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>LearnPlay — Gamified STEM</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+  <div id="app" class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <span>🌱</span> <span>LearnPlay</span>
+      </div>
+      <div id="userTag" class="user-tag">Not signed in</div>
+    </header>
+
+    <!-- 1. Landing (Login) -->
+    <main id="landing" class="fade-in">
+      <div class="split-view">
+        <div class="card">
+          <h2 class="text-gradient">Student Portal</h2>
+          <p class="text-muted" style="margin-bottom:1rem">Login to battle demons and fill jars!</p>
+          <input id="studentEmail" placeholder="Email (e.g. s1@school.com)" />
+          <input id="studentPass" type="password" placeholder="Password" />
+          <button class="btn btn-primary" style="width:100%" onclick="loginAs('student')">Enter Class</button>
+        </div>
+
+        <div class="card">
+          <h2>Teacher Portal</h2>
+          <p class="text-muted" style="margin-bottom:1rem">Manage quizzes and view leaderboards.</p>
+          <input id="teacherEmail" placeholder="Email" />
+          <input id="teacherPass" type="password" placeholder="Password" />
+          <button class="btn btn-secondary" style="width:100%" onclick="loginAs('teacher')">Teacher Login</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- 2. Student Dashboard -->
+    <div id="studentView" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem">
+        <h2 class="text-gradient">Choose Your Adventure</h2>
+        <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+      </div>
+
+      <div class="subject-grid">
+        <!-- Math Card -->
+        <div class="card" style="text-align:center; cursor:pointer" onclick="playSubject('math')">
+          <div style="font-size:3rem; margin-bottom:1rem">👹</div>
+          <h3>Math Demon</h3>
+          <p class="text-muted">Defeat the logic demon with calculations.</p>
+          <div style="margin-top:1rem; color:var(--text-highlight)">Play Now &rarr;</div>
+        </div>
+
+        <!-- Science Card -->
+        <div class="card" style="text-align:center; cursor:pointer" onclick="playSubject('science')">
+          <div style="font-size:3rem; margin-bottom:1rem">⚗️</div>
+          <h3>Science Jar</h3>
+          <p class="text-muted">Fill the solution jar with correct answers.</p>
+          <div style="margin-top:1rem; color:var(--text-highlight)">Play Now &rarr;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Quiz View -->
+    <div id="quizView" class="hidden">
+      <div style="display:flex; justify-content:space-between; margin-bottom:1rem">
+        <div id="quizScore" style="font-weight:700; color:var(--text-highlight)">Score: 0</div>
+        <button class="btn btn-secondary"
+          onclick="document.getElementById('quizView').classList.add('hidden');document.getElementById('studentView').classList.remove('hidden')">Exit</button>
+      </div>
+
+      <div class="game-container">
+        <!-- Game Stage -->
+        <div class="game-stage">
+
+          <!-- Demon SVG -->
+          <div id="demonWrapper" class="demon-wrapper hidden">
+            <svg viewBox="0 0 220 160" width="300" height="200">
+              <defs>
+                <linearGradient id="demonFill" x1="0" x2="1">
+                  <stop offset="0" stop-color="#ff6b6b" />
+                  <stop offset="1" stop-color="#ff3b3b" />
+                </linearGradient>
+              </defs>
+              <g transform="translate(10,0)">
+                <ellipse cx="110" cy="90" rx="70" ry="60" fill="url(#demonFill)" />
+                <!-- Eyes -->
+                <circle cx="80" cy="70" r="8" fill="#111" />
+                <circle cx="140" cy="70" r="8" fill="#111" />
+                <!-- Angry Brows -->
+                <path d="M60 55 L90 65" stroke="#700" stroke-width="5" stroke-linecap="round" />
+                <path d="M160 55 L130 65" stroke="#700" stroke-width="5" stroke-linecap="round" />
+                <!-- Mouth -->
+                <path d="M70 110 q40 30 80 0" stroke="#b22222" stroke-width="6" stroke-linecap="round" fill="none">
+                </path>
+              </g>
+            </svg>
+            <!-- Health Bar inside game stage -->
+            <div
+              style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:200px; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden">
+              <div id="demonHealthBar" style="width:100%; height:100%; background:#ef4444; transition:width 0.3s ease">
+              </div>
+            </div>
+          </div>
+
+          <!-- Jar SVG -->
+          <div id="jarWrapper" class="jar-wrapper hidden">
+            <svg viewBox="0 0 120 260" width="160" height="300">
+              <defs>
+                <clipPath id="jarClip">
+                  <path
+                    d="M30 20 h60 a10 10 0 0 1 10 10 v180 a20 20 0 0 1 -20 20 h-40 a20 20 0 0 1 -20 -20 v-180 a10 10 0 0 1 10 -10 z">
+                  </path>
+                </clipPath>
+              </defs>
+              <!-- Glass -->
+              <rect x="0" y="0" width="120" height="260" fill="rgba(255,255,255,0.1)" rx="6" />
+              <!-- Liquid -->
+              <g clip-path="url(#jarClip)">
+                <rect id="liquid" x="0" y="260" width="120" height="260" fill="#3b82f6" class="jar-liquid"></rect>
+              </g>
+              <!-- Outline -->
+              <path
+                d="M30 20 h60 a10 10 0 0 1 10 10 v180 a20 20 0 0 1 -20 20 h-40 a20 20 0 0 1 -20 -20 v-180 a10 10 0 0 1 10 -10 z"
+                fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="3" />
+            </svg>
+          </div>
+
+        </div>
+
+        <!-- Question Area -->
+        <div id="qArea" style="width:100%; text-align:center">
+          <div id="quizProgress" class="text-muted">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Teacher View -->
+    <!-- 4. Teacher View -->
+    <div id="teacherView" class="hidden">
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem">
+        <h2>Teacher Dashboard</h2>
+        <div style="display:flex; gap:1rem">
+          <span id="teacherNameDisplay" class="text-highlight" style="align-self:center"></span>
+          <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+        </div>
+      </header>
+
+      <!-- Teacher Navigation Tabs -->
+      <div class="tabs"
+        style="display:flex; gap:1rem; margin-bottom:2rem; border-bottom:1px solid var(--border-light); padding-bottom:1rem">
+        <button class="btn btn-secondary active-tab" id="tab-create" onclick="switchTeacherTab('create')">Create
+          Quiz</button>
+        <button class="btn btn-secondary" id="tab-roster" onclick="switchTeacherTab('roster')">Class Roster</button>
+        <button class="btn btn-secondary" id="tab-leaderboard"
+          onclick="switchTeacherTab('leaderboard')">Leaderboard</button>
+      </div>
+
+      <!-- Tab Content: Create Quiz -->
+      <div id="view-create" class="tab-content fade-in">
+        <div class="card">
+          <h3>Build a New Quiz</h3>
+          <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1rem; margin-bottom:1.5rem">
+            <input id="newQuizTitle" placeholder="Quiz Title (e.g. 'Monday Math Madness')" />
+            <select id="newQuizSubject">
+              <option value="math">Math</option>
+              <option value="science">Science</option>
+            </select>
+          </div>
+
+          <div id="builderQuestions" style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1.5rem">
+            <!-- Dynamic Question Cards will go here -->
+          </div>
+
+          <div style="display:flex; gap:1rem">
+            <button class="btn btn-secondary" onclick="addBuilderQuestion()">+ Add Question</button>
+            <button class="btn btn-primary" onclick="saveBuilderQuiz()">Publish Quiz</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Roster -->
+      <div id="view-roster" class="tab-content hidden fade-in">
+        <div class="card">
+          <h3>My Students</h3>
+          <div id="rosterList" style="display:grid; gap:1rem; margin-top:1rem">
+            <!-- Student items -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Leaderboard -->
+      <div id="view-leaderboard" class="tab-content hidden fade-in">
+        <div class="card">
+          <h3>Class Leaderboard</h3>
+          <div id="leaderboardList" style="margin-top:1rem">
+            <!-- Leaderboard items -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/bundle.js"></script>
+</body>
+
+</html>
