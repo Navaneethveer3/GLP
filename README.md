@@ -42,6 +42,20 @@ A gamified STEM learning platform for students, featuring interactive quizzes wi
 5.  Select `main` branch as the source and save.
 6.  Your site will be live at `https://<username>.github.io/<repo-name>/`.
 
+### Netlify (Drag & Drop or Git)
+**Option 1: Git (Recommended)**
+1. Push your code to GitHub (as shown above).
+2. Log in to [Netlify](https://app.netlify.com/).
+3. Click **"Add new site"** > **"Import from an existing project"**.
+4. Select GitHub and choose your repository.
+5. Netlify will detect the settings automatically (thanks to `netlify.toml`).
+6. Click **Deploy**.
+
+**Option 2: Drag & Drop**
+1. Log in to Netlify.
+2. Drag the entire `Gamified Learning Platform` folder onto the Netlify dashboard.
+3. It will deploy instantly.
+
 ### Firebase Hosting
 1.  Install Firebase CLI: `npm install -g firebase-tools`
 2.  Login: `firebase login`
